@@ -1,79 +1,64 @@
-# Setup Three Nodes K8s Cluster with Kubeadm
+# Kubeadm Vagrant CentOS Cluster
 
-## Prepare Three Nodes
+## Setup Nodes Using Vagrant
 
-Create three nodes Centos7 machines through `Vagrant`
+Bring up there CentOS 7 VMs as k8s nodes
 
 ```bash
 vagrant up
 ```
 
-Then check all three nodes have installed `kubeadm`, `kubelet` and `kubectl`, and Docker is running.
+
+## Configuring K8s Master node
+
+SSH into k8s master node:
 
 ```bash
-➜  kubeadm git:(master) ✗ vagrant status
-Current machine states:
-
-k8s-master                running (virtualbox)
-k8s-node1                 running (virtualbox)
-k8s-node2                 running (virtualbox)
-
-This environment represents multiple VMs. The VMs are all listed
-above with their current state. For more information about a specific
-VM, run `vagrant status NAME`.
-➜  kubeadm git:(master) ✗ vagrant ssh k8s-master
-Last login: Sat Jun  9 14:00:35 2018 from 10.0.2.2
--bash: warning: setlocale: LC_CTYPE: cannot change locale (UTF-8): No such file or directory
-[vagrant@k8s-master ~]$
-[vagrant@k8s-master ~]$
-[vagrant@k8s-master ~]$
-[vagrant@k8s-master ~]$ which kubeadm
-/usr/bin/kubeadm
-[vagrant@k8s-master ~]$ which kubelet
-/usr/bin/kubelet
-[vagrant@k8s-master ~]$ which kubectl
-/usr/bin/kubectl
-[vagrant@k8s-master ~]$
-[vagrant@k8s-master ~]$ sudo docker version
-Client:
- Version:         1.13.1
- API version:     1.26
- Package version: docker-1.13.1-63.git94f4240.el7.centos.x86_64
- Go version:      go1.9.4
- Git commit:      94f4240/1.13.1
- Built:           Fri May 18 15:44:33 2018
- OS/Arch:         linux/amd64
-
-Server:
- Version:         1.13.1
- API version:     1.26 (minimum version 1.12)
- Package version: docker-1.13.1-63.git94f4240.el7.centos.x86_64
- Go version:      go1.9.4
- Git commit:      94f4240/1.13.1
- Built:           Fri May 18 15:44:33 2018
- OS/Arch:         linux/amd64
- Experimental:    false
-[vagrant@k8s-master ~]$
+vagrant ssh k8s-master
 ```
 
-## Configuring Kubernetes Master node
+### Configuration
 
-### Start kubelet in three nodes
 
-First, removing the `$KUBELET_NETWORK_ARGS` in `/etc/systemd/system/kubelet.service.d/10-kubeadm.conf` in all three nodes and start Kubelet
+Modify file `/etc/sysconfig/kubelet` as:
 
 ```bash
-sudo vim /etc/systemd/system/kubelet.service.d/10-kubeadm.conf
+KUBELET_EXTRA_ARGS=--node-ip=192.168.205.120 --fail-swap-on=false
+```
+
+Run `ps -ef | grep kubelet` to check if args are applied
+
+
+### Disable swap
+
+```bash
+sudo swapoff -a
+```
+
+Comment out every entry with `swap` in `/etc/fstab`
+
+### Start k8s service
+
+```bash
 sudo systemctl enable kubelet && sudo systemctl start kubelet
 ```
 
+
 ### kubeadm init on master node
+
+Init master node
 
 ```bash
 sudo kubeadm init --pod-network-cidr 172.100.0.0/16 --apiserver-advertise-address 192.168.205.120
 ```
 
-Output
+Apply network addon
+
+```bash
+kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+```
+
+Follow the command line output and run the required commands, save it if necessary. It should be something like this:
 
 ```bash
 Your Kubernetes master has initialized successfully!
@@ -91,77 +76,62 @@ Run "kubectl apply -f [podnetwork].yaml" with one of the options listed at:
 You can now join any number of machines by running the following on each node
 as root:
 
-  kubeadm join --token a2dc82.7e936a7ba007f01e 10.0.0.7:6443 --discovery-token-ca-cert-hash sha256:30aca9f9c04f829a13c925224b34c47df0a784e9ba94e132a983658a70ee2914
+  kubeadm join 192.168.205.120:6443 --token ... \
+  --discovery-token-ca-cert-hash sha256:...
 ```
 
-Please follow the output. and after all is done, we can get all pods running
 
-On master node:
+## Join Worker Nodes
+
+SSH into worker nodes
+
+### Configuration
+
+
+Modify file `/etc/sysconfig/kubelet` as:
 
 ```bash
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
+KUBELET_EXTRA_ARGS=--node-ip=192.168.205.121 --fail-swap-on=false
 ```
 
-install network addon
+(In k8s-node2 set `--node-ip=192.168.205.122`)
+
+Run `ps -ef | grep kubelet` to check if args are applied
+
+
+### Disable swap
 
 ```bash
-kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
+sudo swapoff -a
 ```
 
-Check if all pod are running. then it's OK.
+Comment out every entry with `swap` in `/etc/fstab`
+
+### Join worker nodes
 
 ```bash
-$ kubectl get pod --all-namespaces
-NAMESPACE     NAME                                 READY     STATUS    RESTARTS   AGE
-kube-system   etcd-k8s-master                      1/1       Running   0          2h
-kube-system   kube-apiserver-k8s-master            1/1       Running   0          2h
-kube-system   kube-controller-manager-k8s-master   1/1       Running   0          2h
-kube-system   kube-dns-86f4d74b45-jdgct            3/3       Running   0          2h
-kube-system   kube-proxy-88kck                     1/1       Running   0          2h
-kube-system   kube-scheduler-k8s-master            1/1       Running   0          2h
-kube-system   weave-net-t6wzf                      2/2       Running   0          45s
+sudo kubeadm join 192.168.205.120:6443 --token ... \
+  --discovery-token-ca-cert-hash sha256:...
 ```
 
-## Join worker node
-
-Please use sudo join
+## Change Node Rules
 
 ```bash
-sudo kubeadm join 192.168.205.120:6443 --token buzfuy.8q20f1gleefqjnor --discovery-token-ca-cert-hash sha256:6844c346b1de821d48747e7a3fd6dc6e408ebbc9018553de85f6704949c03b85
+kubectl label node k8s-master node-role.kubernetes.io/master=
+kubectl label node k8s-node1 node-role.kubernetes.io/worker=
+kubectl label node k8s-node2 node-role.kubernetes.io/worker=
 ```
 
-After that, we can get three nodes ouput on master node
+The k8s cluster should be good to go! Run `kubectl get nodes` and check output, which should be like this:
 
 ```bash
-[vagrant@k8s-master ~]$ kubectl get node
-NAME         STATUS    ROLES     AGE       VERSION
-k8s-master   Ready     master    5m        v1.10.5
-k8s-node1    Ready     <none>    40s       v1.10.5
-k8s-node2    Ready     <none>    13s       v1.10.5
+[vagrant@k8s-master ~]$ kubectl get nodes
+NAME         STATUS   ROLES    AGE   VERSION
+k8s-master   Ready    master   8d    v1.18.2
+k8s-node1    Ready    worker   8d    v1.18.2
+k8s-node2    Ready    worker   8d    v1.18.2
 ```
-
-all pod are ok include flannel
-
-```bash
-$ kubectl get pod --all-namespaces
-NAMESPACE     NAME                                 READY     STATUS    RESTARTS   AGE
-kube-system   etcd-k8s-master                      1/1       Running   0          2h
-kube-system   kube-apiserver-k8s-master            1/1       Running   0          2h
-kube-system   kube-controller-manager-k8s-master   1/1       Running   0          2h
-kube-system   kube-dns-86f4d74b45-jdgct            3/3       Running   0          2h
-kube-system   kube-proxy-5jd2z                     1/1       Running   0          1m
-kube-system   kube-proxy-88kck                     1/1       Running   0          2h
-kube-system   kube-proxy-jpcwg                     1/1       Running   0          34s
-kube-system   kube-scheduler-k8s-master            1/1       Running   0          2h
-kube-system   weave-net-87n66                      2/2       Running   0          1m
-kube-system   weave-net-kkgq6                      2/2       Running   0          34s
-kube-system   weave-net-t6wzf                      2/2       Running   0          3m
-```
-
 
 ## Reference
 
-[https://blog.tekspace.io/setup-kubernetes-cluster-on-centos-7/](https://blog.tekspace.io/setup-kubernetes-cluster-on-centos-7/
-)
+[https://github.com/udemy-course/Kubernetes-CN](https://github.com/udemy-course/Kubernetes-CN)
