@@ -107,6 +107,13 @@ sudo swapoff -a
 
 Comment out every entry with `swap` in `/etc/fstab`
 
+### Start k8s service
+
+```bash
+sudo systemctl enable kubelet && sudo systemctl start kubelet
+```
+
+
 ### Join worker nodes
 
 ```bash
@@ -131,6 +138,40 @@ k8s-master   Ready    master   8d    v1.18.2
 k8s-node1    Ready    worker   8d    v1.18.2
 k8s-node2    Ready    worker   8d    v1.18.2
 ```
+
+## Grafana Dashboard
+
+### Installation
+
+Use helm to install:
+
+```bash
+helm install prometheus-operator stable/prometheus-operator --namespace=monitoring
+```
+
+Check with `kubectl get pods -n monitoring`, the output should be like this:
+
+```bash
+NAME                                                     READY   STATUS    RESTARTS   AGE
+alertmanager-prometheus-operator-alertmanager-0          2/2     Running   6          7d1h
+prometheus-operator-grafana-5c9db857df-rzrz6             2/2     Running   6          7d1h
+prometheus-operator-kube-state-metrics-5fdcd78bc-dmlcn   1/1     Running   3          7d1h
+prometheus-operator-operator-798fd47bd9-kwwqq            2/2     Running   6          7d1h
+prometheus-operator-prometheus-node-exporter-2svcd       1/1     Running   3          7d1h
+prometheus-operator-prometheus-node-exporter-5w8dj       1/1     Running   3          7d1h
+prometheus-operator-prometheus-node-exporter-pkx86       1/1     Running   3          7d1h
+prometheus-prometheus-operator-prometheus-0              3/3     Running   10         7d1h
+```
+
+### Usage
+
+```
+kubectl port-forward $(kubectl get pods --selector=app.kubernetes.io/name=grafana -n monitoring --output=jsonpath="{.items..metadata.name}") -n monitoring 3000
+```
+
+Go to `http://localhost:3000/` to access the dashboard
+
+Default username: *admin* and password: *prom-operator*
 
 ## Reference
 
