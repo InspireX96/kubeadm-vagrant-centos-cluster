@@ -7,8 +7,8 @@ boxes = [
     {
         :name => "k8s-master",
         :eth1 => "192.168.205.120",
-        :mem => "8192",
-        :cpu => "2"
+        :mem => "16384",
+        :cpu => "4"
     },
     {
         :name => "k8s-node1",
