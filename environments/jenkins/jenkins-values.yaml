@@ -99,11 +99,20 @@ controller:
   # Use Local to preserve the client source IP and avoids a second hop for LoadBalancer and Nodeport type services,
   # but risks potentially imbalanced traffic spreading.
 
+  # List of plugins to be install during Jenkins controller start
+  installPlugins:
+    - sshd:3.0.4
+    - docker-commons:1.15
+    - kubernetes:1.29.4
+    - workflow-aggregator:2.6
+    - git:4.7.1
+    - configuration-as-code:1.51
+  
   # Set to false to download the minimum required version of all dependencies.
-  installLatestPlugins: false
+  installLatestPlugins: true
 
   # Set to true to download latest dependencies of any plugin that is requested to have the latest version.
-  installLatestSpecifiedPlugins: false
+  installLatestSpecifiedPlugins: true
 
   # List of plugins to install in addition to those listed in controller.installPlugins
   additionalPlugins: []
@@ -141,6 +150,12 @@ controller:
     #  welcome-message: |
     #    jenkins:
     #      systemMessage: Welcome to our CI\CD server.  This Jenkins is configured and managed 'as code'.
+
+  containerEnv:
+    - name: PLUGINS_FORCE_UPGRADE
+      value: "true"
+    - name: TRY_UPGRADE_IF_NO_MARKER
+      value: "true"
 
   sidecars:
     configAutoReload:
