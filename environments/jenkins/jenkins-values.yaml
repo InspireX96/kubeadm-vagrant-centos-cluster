@@ -1,14 +1,5 @@
 # Default values for jenkins.
 # This is a YAML-formatted file.
-# Declare name/value pairs to be passed into your templates.
-# name: value
-
-## Overrides for generated resource names
-# See templates/_helpers.tpl
-# nameOverride:
-# fullnameOverride:
-# namespaceOverride:
-
 # For FQDN resolving of the controller service. Change this value to match your existing configuration.
 # ref: https://github.com/kubernetes/dns/blob/master/docs/specification.md
 clusterZone: "cluster.local"
@@ -21,46 +12,13 @@ controller:
   image: "jenkins/jenkins"
   tag: "2.289.3-jdk11"
   imagePullPolicy: "Always"
-  imagePullSecretName:
-  # Optionally configure lifetime for controller-container
-  lifecycle:
-  #  postStart:
-  #    exec:
-  #      command:
-  #      - "uname"
-  #      - "-a"
   disableRememberMe: false
   numExecutors: 0
   # configures the executor mode of the Jenkins node. Possible values are: NORMAL or EXCLUSIVE
   executorMode: "NORMAL"
   # This is ignored if enableRawHtmlMarkupFormatter is true
   markupFormatter: plainText
-  customJenkinsLabels: []
-  # The default configuration uses this secret to configure an admin user
-  # If you don't need that user or use a different security realm then you can disable it
-  adminSecret: true
 
-  hostNetworking: false
-  # When enabling LDAP or another non-Jenkins identity source, the built-in admin account will no longer exist.
-  # If you disable the non-Jenkins identity store and instead use the Jenkins internal one,
-  # you should revert controller.adminUser to your preferred admin user:
-  adminUser: "admin"
-  # adminPassword: <defaults to random>
-  admin:
-    existingSecret: ""
-    userKey: jenkins-admin-user
-    passwordKey: jenkins-admin-password
-  # This values should not be changed unless you use your custom image of jenkins or any devired from. If you want to use
-  # Cloudbees Jenkins Distribution docker, you should set jenkinsHome: "/var/cloudbees-jenkins-distribution"
-  jenkinsHome: "/var/jenkins_home"
-  # This values should not be changed unless you use your custom image of jenkins or any devired from. If you want to use
-  # Cloudbees Jenkins Distribution docker, you should set jenkinsRef: "/usr/share/cloudbees-jenkins-distribution/ref"
-  jenkinsRef: "/usr/share/jenkins/ref"
-  # Path to the jenkins war file which is used by jenkins-plugin-cli.
-  jenkinsWar: "/usr/share/jenkins/jenkins.war"
-  # Overrides the default arguments passed to the war
-  # overrideArgs:
-  #   - --httpPort=8080
   resources:
     requests:
       cpu: "50m"
@@ -77,20 +35,7 @@ controller:
   # When setting runAsUser to a different value than 0 also set fsGroup to the same value:
   runAsUser: 0  # solve permission denied issue in /var/jenkins_config/apply_config.sh
   fsGroup: 0
-  # If you have PodSecurityPolicies that require dropping of capabilities as suggested by CIS K8s benchmark, put them here
-  securityContextCapabilities: {}
-  #  drop:
-  #    - NET_RAW
-  # Completely overwrites the contents of the `securityContext`, ignoring the
-  # values provided for the deprecated fields: `runAsUser`, `fsGroup`, and
-  # `securityContextCapabilities`.  In the case of mounting an ext4 filesystem,
-  # it might be desirable to use `supplementalGroups` instead of `fsGroup` in
-  # the `securityContext` block: https://github.com/kubernetes/kubernetes/issues/67014#issuecomment-589915496
-  # podSecurityContextOverride:
-  #   runAsUser: 1000
-  #   runAsNonRoot: true
-  #   supplementalGroups: [1000]
-  #   # capabilities: {}
+
   servicePort: 32000
   targetPort: 8080
   # For minikube, set this to NodePort, elsewhere use LoadBalancer
