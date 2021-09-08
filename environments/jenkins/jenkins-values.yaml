@@ -38,6 +38,7 @@ controller:
 
   servicePort: 32000
   targetPort: 8080
+  nodePort: 32218
   # For minikube, set this to NodePort, elsewhere use LoadBalancer
   # Use ClusterIP if your setup includes ingress controller
   serviceType: NodePort
