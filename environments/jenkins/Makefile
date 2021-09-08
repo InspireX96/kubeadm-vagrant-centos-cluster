@@ -17,3 +17,8 @@ install: kustomize
 .PHONY: upgrade
 upgrade: kustomize
 	helm upgrade jenkins -n $(namespace) -f jenkins-values.yaml $(chart)
+
+.PHONY: uninstall
+uninstall:
+	helm uninstall jenkins -n $(namespace)
+	kubectl delete -k ./
