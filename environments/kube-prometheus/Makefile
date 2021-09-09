@@ -1,11 +1,11 @@
-helm_name = jenkins
-namespace = jenkins
-helm_file = jenkins-values.yaml
-chart = jenkinsci/jenkins
+helm_name = kube-prometheus
+namespace = monitoring
+helm_file = kube-prometheus-values.yaml
+chart = prometheus-community/kube-prometheus-stack
 
 .PHONY: add-repo
 add-repo:
-	helm repo add jenkinsci https://charts.jenkins.io
+	helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
 	helm repo update
 
 .PHONY: kustomize
