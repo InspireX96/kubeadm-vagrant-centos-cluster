@@ -76,10 +76,17 @@ as root:
 
 Apply network addon
 
+Use weave
+
 ```bash
 kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=$(kubectl version | base64 | tr -d '\n')"
 ```
 
+Or calico
+
+```bash
+kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
+```
 
 
 ## Join Worker Nodes
@@ -132,6 +139,15 @@ kubectl label node k8s-node1 node-role.kubernetes.io/worker=
 kubectl label node k8s-node2 node-role.kubernetes.io/worker=
 ```
 
+### Taint Master (optional)
+
+So we can schedule jobs on the master node
+
+
+```
+kubectl taint nodes --all node-role.kubernetes.io/master-
+```
+
 The k8s cluster should be good to go! Run `kubectl get nodes` and check output, which should be like this:
 
 ```bash
@@ -149,5 +165,7 @@ Follow this [https://kubernetes.io/docs/setup/production-environment/tools/kubea
 Or modify local kube config to match the config on the master node located at `~/.kube/config`
 
 ## Reference
+
+[https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/)
 
 [https://github.com/udemy-course/Kubernetes-CN](https://github.com/udemy-course/Kubernetes-CN)
