@@ -20,7 +20,7 @@ vagrant ssh k8s-master
 ### Configuration
 
 
-Modify file `/etc/sysconfig/kubelet` as:
+Modify file `/etc/sysconfig/kubelet` as (this step is now automatically done by setup.sh):
 
 ```bash
 KUBELET_EXTRA_ARGS=--node-ip=193.168.205.120 --fail-swap-on=false --cgroup-driver=cgroupfs
@@ -124,6 +124,8 @@ sudo kubeadm join 192.168.205.120:6443 --token ... \
 
 ## Change Node Rules
 
+Run following commands in k8s master node
+
 ```bash
 kubectl label node k8s-master node-role.kubernetes.io/master=
 kubectl label node k8s-node1 node-role.kubernetes.io/worker=
@@ -144,7 +146,7 @@ k8s-node2    Ready    worker   8d    v1.18.2
 
 Follow this [https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#optional-proxying-api-server-to-localhost](https://kubernetes.io/docs/setup/production-environment/tools/kubeadm/create-cluster-kubeadm/#optional-proxying-api-server-to-localhost)
 
-Or modify local kube config to match the config on the master node
+Or modify local kube config to match the config on the master node located at `~/.kube/config`
 
 ## Reference
 
